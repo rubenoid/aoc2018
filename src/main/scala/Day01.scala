@@ -1,4 +1,5 @@
-import scala.io._
+import scala.annotation.tailrec
+import scala.io.*
 
 object Day01 extends App:
 
@@ -16,4 +17,23 @@ object Day01 extends App:
       .toList
 
   val answer1: Int = frequencies.sum
-  println(s"Answer day $day part 1: ${answer1} [${System.currentTimeMillis - start1}ms]")
+  println(Console.BLUE + s"Answer day $day part 1: ${answer1} [${System.currentTimeMillis - start1}ms]")
+
+  /* Part 2 */
+  val start2: Long =
+    System.currentTimeMillis
+
+  var myMap = scala.collection.mutable.Set[Int]()
+  var wave = 0;
+
+  var condition = false
+  while (!condition) {
+    for freq <- frequencies; if !condition do {
+      wave += freq
+      if myMap.contains(wave) then condition = true;
+      else myMap.addOne(wave)
+    }
+  }
+  val answer2: Int = wave
+
+  println(Console.BLUE + s"Answer day $day part 2: ${answer2} [${System.currentTimeMillis - start2}ms]")
