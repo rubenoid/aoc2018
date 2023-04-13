@@ -50,6 +50,12 @@ object Day03 extends App:
     System.currentTimeMillis
   var answer2: Int = 0
   val flattenendArr = arr.flatten
+  val occurencesArr = new Array[Int](2000)
+
+  for (i <- flattenendArr) {
+    if (i > 0)
+      occurencesArr(i) += 1
+  }
 
   for (claim <- claims) {
     val rect = claim match {
@@ -57,8 +63,9 @@ object Day03 extends App:
         Rect(id.toInt, left.toInt, top.toInt, width.toInt, height.toInt)
     }
     val findSq = rect.width * rect.height
-    if (flattenendArr.count(_ == rect.id) == findSq) answer2 = rect.id
+    if (occurencesArr(rect.id) == findSq) answer2 = rect.id
   }
+
 
   println(Console.BLUE + s"Answer day $day part 2: ${answer2} [${System.currentTimeMillis - start2}ms]")
 
