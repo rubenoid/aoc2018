@@ -66,7 +66,8 @@ object Day04 extends App:
       case _ => None
   }
 
-  val answer1: Int = arrMinutes.indexOf(arrMinutes.max) * max_guard_id
+  val minute_most_asleep = arrMinutes.indexOf(arrMinutes.max)
+  val answer1: Int = minute_most_asleep * max_guard_id
   println(Console.BLUE + s"Answer day $day part 1: ${answer1} [${System.currentTimeMillis - start1}ms]")
 
   /* Part 2 */
