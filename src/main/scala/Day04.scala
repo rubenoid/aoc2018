@@ -74,6 +74,37 @@ object Day04 extends App:
   val start2: Long =
     System.currentTimeMillis
 
-  val answer2: Int = 999
+  val guards2 = collection.mutable.Map[Int, (Int, Array[Int])]()
+  for (r <- records) {
+    r match
+      case pattern_guard(_,_,_,_,_, id) => guards2.update(id.toInt,(0, new Array[Int](60)))
+      case _ => None
+  }
+
+  for (r <- records) {
+    r match
+      case pattern_guard(_, _, _, _, _, id)         => current_guard = id.toInt
+      case pattern_falls_asleep(_, _, _, _, minute) => start = minute.toInt
+      case pattern_wakes_up(_, _, _, _, minute)     =>
+        val first = guards2(current_guard)._1 + minute.toInt - start
+        val second = guards2(current_guard)._2
+        for (i <- start until minute.toInt)
+          second(i) += 1
+        guards2(current_guard) = (first, second)
+      case _ => None
+  }
+
+  var mmmax = 0
+  var index_max = 0
+  var g_id = 0
+  for (g <- guards2) {
+    for (i <- 0 until 60)
+      if (g._2._2(i) > mmmax)
+        mmmax = g._2._2(i)
+        index_max = i
+        g_id = g._1
+  }
+
+  val answer2: Int = g_id * index_max
 
   println(Console.BLUE + s"Answer day $day part 2: ${answer2} [${System.currentTimeMillis - start2}ms]")
