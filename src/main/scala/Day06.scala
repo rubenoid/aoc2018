@@ -20,7 +20,7 @@ object Day06 extends App:
 
   println(coordinates)
 
-  val dim = 10
+  val dim = 400
   var field = Array.fill[Int](dim,dim)(-2)
 
   def manhattenDist(x1: Int, y1: Int, x2: Int, y2: Int): Int = {
@@ -97,14 +97,20 @@ object Day06 extends App:
       acc + dist
     })
 
-  val amountRegionPoints = {
-    val distancePoints = for {
-      i <- 0 until dim
-      j <- 0 until dim
-      dist = distanceToPoints(i, j, coordinates)
-    } yield dist
-    distancePoints.count(_ < 10000)
-  }
+//  val amountRegionPoints = {
+//    val distancePoints = for {
+//      i <- 0 until dim
+//      j <- 0 until dim
+//      dist = distanceToPoints(i, j, coordinates)
+//    } yield dist
+//    distancePoints.count(_ < 10000)
+//  }
+  val amountRegionPoints = (0 until dim).foldLeft(0)((acc, i) => {
+    (0 until dim).foldLeft(acc)((acc2, j) => {
+      val dist = distanceToPoints(i, j, coordinates)
+      if (dist < 10000) acc2 + 1 else acc2
+    })
+  })
 
   val answer2: Int = amountRegionPoints
 
