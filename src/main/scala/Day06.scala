@@ -10,26 +10,17 @@ object Day06 extends App:
   val start1: Long =
     System.currentTimeMillis
 
-  val input =
+//  val pattern = """(\d+), (\d+)""".r
+  val coordinates =
     Source
       .fromResource(s"input$day.txt")
       .getLines
+      .map { case s"$x, $y" => (x.toInt, y.toInt) }
+      .toList
 
-  val pattern = """(\d+), (\d+)""".r
-
-  val coordinates = {
-    var tmp: List[(Int, Int)] = List[(Int, Int)]()
-    for (l <- input) {
-      l match
-        case pattern(x, y) =>
-          val t = (y.toInt, x.toInt)
-          tmp = tmp :+ t
-    }
-    tmp
-  }
   println(coordinates)
 
-  val dim = 400
+  val dim = 10
   var field = Array.fill[Int](dim,dim)(-2)
 
   def manhattenDist(x1: Int, y1: Int, x2: Int, y2: Int): Int = {
@@ -57,35 +48,39 @@ object Day06 extends App:
     points.contains((x1, y1))
   }
 
-  for (i <- field.indices)
-    for (j <- field(0).indices)
-//      if (!pointIsInList(i, j, coordinates))
-        val indexPoint = indexToClosestPoint(i, j, coordinates)
-        if (indexPoint == -1)
-          field(i)(j) = -1
-        else
-          field(i)(j) = indexPoint
-
-  def findMaxPoints(): Int = {
-    var keys = for {
-      i <- 1 until field.length
-      j <- 1 until field.length
-      key = field(i)(j)
-    } yield(key)
+  /* Rewriting the following using map
 
     for (i <- field.indices)
-      val l = field.length
-      keys = keys.filter(x => {
-        x != field(i)(0) &&
-          x != field(i)(l - 1) &&
-          x != field(0)(i) &&
-          x != field(l - 1)(i)
-      })
-    keys.filter(_ >= 0)
+      for (j <- field(0).indices)
+          val indexPoint = indexToClosestPoint(i, j, coordinates)
+          if (indexPoint == -1)
+            field(i)(j) = -1
+          else
+            field(i)(j) = indexPoint
+
+  */
+  field = field.zipWithIndex
+    .map(row => row._1
+      .zipWithIndex
+      .map(e => {
+        val indexPoint = indexToClosestPoint(row._2, e._2, coordinates)
+        if (indexPoint == -1) -1 else indexPoint
+      }))
+
+  def findMaxPoints(): Int = {
+    val setOfOutsideEl: Set[Int] = (
+      field.head ++
+        field.last ++
+        field.transpose.head ++
+        field.transpose.last)
+      .toSet
+
+    field.flatten
+      .filter(x => !setOfOutsideEl.contains(x)) // filter the elements that have a member on the outside
+      .filter(_ >= 0) // filter the -1's
       .groupBy(identity)
       .map(_._2.length)
       .max
-
   }
   println(findMaxPoints())
 
@@ -97,11 +92,10 @@ object Day06 extends App:
     System.currentTimeMillis
 
   def distanceToPoints(x1: Int, y1: Int, points: List[(Int, Int)]): Int =
-    val distances = for {
-      point <- points
-      dist = manhattenDist(x1, y1, point._1, point._2)
-    } yield dist
-    distances.sum
+    points.foldLeft(0)((acc, point) => {
+      val dist = manhattenDist(x1, y1, point._1, point._2)
+      acc + dist
+    })
 
   val amountRegionPoints = {
     val distancePoints = for {
