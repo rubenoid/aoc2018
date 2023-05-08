@@ -1,4 +1,3 @@
-import scala.+:
 import scala.annotation.tailrec
 import scala.io.*
 
@@ -10,108 +9,88 @@ object Day06 extends App:
   val start1: Long =
     System.currentTimeMillis
 
-//  val pattern = """(\d+), (\d+)""".r
-  val coordinates =
+  case class Coordinate(x: Int, y: Int)
+
+  case class Grid(coordinates: List[Coordinate]):
+    private val maxX: Int = coordinates.maxBy(_.x).x
+    private val maxY: Int = coordinates.maxBy(_.y).y
+    private val border: Int = if (maxX > maxY) maxX else maxY
+
+    private val xy: List[Coordinate] = (for {
+      i <- 0 to border
+      j <- 0 to border
+    } yield Coordinate(i, j)).toList
+
+    private val pointsWithClosestTo: List[(Coordinate, Int)] = xy.map(p => (p, indexToClosestPoint(p)))
+
+    private def manhattanDistance(coord1: Coordinate, coord2: Coordinate): Int =
+      import math.abs
+      abs(coord1.x - coord2.x) + abs(coord1.y - coord2.y)
+
+    /* TODO Option[Int */
+    private def indexToClosestPoint(point: Coordinate): Int =
+      val distances: List[Int] = for {
+        coord <- coordinates
+        dist = manhattanDistance(point, coord)
+      } yield dist
+      val min: Int = distances.min
+      if (distances.count(x => x == min) > 1) -1 else distances.indexOf(min)
+
+    /*
+      The infinite points, i.e. the points that are on the border, should be removed from the list.
+      Result is a list of valid points.
+    */
+    private def validPoints: List[(Coordinate, Int)] =
+      val setOfInfinites =  pointsWithClosestTo.filter {
+        case (p, _) => p.x == 0 || p.x == border || p.y == 0 || p.y == border
+      }
+        .map(_._2)
+        .toSet
+
+      pointsWithClosestTo.filterNot {
+        case (_, v) => setOfInfinites.contains(v)
+      }
+//      pointsWithClosestTo.filterNot(p => setOfInfinites.contains(p._2))
+
+    /* Part 1 */
+    def getMost: Int =
+      validPoints
+        .map(x => x._2)
+        .groupBy(identity)
+        .map(x => x._2.length)
+        .max
+
+    /* Part 2 */
+    def distanceToPoints(point: Coordinate): Int =
+      coordinates.foldLeft(0)((acc, coord) => {
+        val dist = manhattanDistance(point, coord)
+        acc + dist
+      })
+
+    def amountRegionPoints: Int =
+      xy.indices.foldLeft(0)((acc, i) => {
+      val dist = distanceToPoints(xy(i))
+      if (dist < 10000) acc + 1 else acc
+    })
+
+  end Grid
+
+  val coordinates: List[Coordinate] =
     Source
       .fromResource(s"input$day.txt")
       .getLines
-      .map { case s"$x, $y" => (x.toInt, y.toInt) }
+      .map { case s"$x, $y" => Coordinate(x.toInt, y.toInt) }
       .toList
 
-  println(coordinates)
 
-  val dim = 400
-  var field = Array.fill[Int](dim,dim)(-2)
-
-  def manhattenDist(x1: Int, y1: Int, x2: Int, y2: Int): Int = {
-    math.abs(x1 - x2) + math.abs(y1 - y2)
-  }
-
-  /*
-  Returns the index of the closest point out of the list points
-  -1 if there are more than one point that is closest
-  */
-  def indexToClosestPoint(x1: Int, y1: Int, points: List[(Int, Int)]): Int = {
-    val distances = for {
-      point <- points
-      dist = manhattenDist(x1, y1, point._1, point._2)
-    } yield dist
-    val minimum = distances.min
-    val amountOfPoints = distances.count(x => x == minimum)
-    if (amountOfPoints > 1)
-      -1
-    else
-      distances.indexOf(distances.min)
-  }
-
-  def pointIsInList(x1: Int, y1: Int, points: List[(Int, Int)]): Boolean = {
-    points.contains((x1, y1))
-  }
-
-  /* Rewriting the following using map
-
-    for (i <- field.indices)
-      for (j <- field(0).indices)
-          val indexPoint = indexToClosestPoint(i, j, coordinates)
-          if (indexPoint == -1)
-            field(i)(j) = -1
-          else
-            field(i)(j) = indexPoint
-
-  */
-  field = field.zipWithIndex
-    .map(row => row._1
-      .zipWithIndex
-      .map(e => {
-        val indexPoint = indexToClosestPoint(row._2, e._2, coordinates)
-        if (indexPoint == -1) -1 else indexPoint
-      }))
-
-  def findMaxPoints(): Int = {
-    val setOfOutsideEl: Set[Int] = (
-      field.head ++
-        field.last ++
-        field.transpose.head ++
-        field.transpose.last)
-      .toSet
-
-    field.flatten
-      .filter(x => !setOfOutsideEl.contains(x)) // filter the elements that have a member on the outside
-      .filter(_ >= 0) // filter the -1's
-      .groupBy(identity)
-      .map(_._2.length)
-      .max
-  }
-  println(findMaxPoints())
-
-  val answer1: Int = findMaxPoints()
+  val answer1: Int = Grid(coordinates).getMost
   println(Console.BLUE + s"Answer day $day part 1: ${answer1} [${System.currentTimeMillis - start1}ms]")
 
   /* Part 2 */
   val start2: Long =
     System.currentTimeMillis
 
-  def distanceToPoints(x1: Int, y1: Int, points: List[(Int, Int)]): Int =
-    points.foldLeft(0)((acc, point) => {
-      val dist = manhattenDist(x1, y1, point._1, point._2)
-      acc + dist
-    })
 
-//  val amountRegionPoints = {
-//    val distancePoints = for {
-//      i <- 0 until dim
-//      j <- 0 until dim
-//      dist = distanceToPoints(i, j, coordinates)
-//    } yield dist
-//    distancePoints.count(_ < 10000)
-//  }
-  val amountRegionPoints = (0 until dim).foldLeft(0)((acc, i) => {
-    (0 until dim).foldLeft(acc)((acc2, j) => {
-      val dist = distanceToPoints(i, j, coordinates)
-      if (dist < 10000) acc2 + 1 else acc2
-    })
-  })
-
-  val answer2: Int = amountRegionPoints
+  val answer2: Int = Grid(coordinates).amountRegionPoints
 
   println(Console.BLUE + s"Answer day $day part 2: ${answer2} [${System.currentTimeMillis - start2}ms]")
