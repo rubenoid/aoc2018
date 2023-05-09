@@ -39,7 +39,7 @@ class TestSolutions extends AnyFunSuite:
 //    assertResult(32614)(actual = Day06.answer2)
 //  }
   test("Day07 Part 1") {
-    assertResult("CABDFE")(actual = Day07.answer1)
+    assertResult("BFKEGNOVATIHXYZRMCJDLSUPWQ")(actual = Day07.answer1)
   }
   test("Day07 Part 2") {
     assertResult("999")(actual = Day07.answer2)
