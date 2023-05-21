@@ -70,6 +70,85 @@ object Day07 extends App:
   val start2: Long =
     System.currentTimeMillis
 
-  val answer2: String = "AAA"
+  case class Worker(secLeft: Int, letter: Char, working: Boolean)
+
+  def updateTimeWorkers(w: List[Worker]): List[Worker] =
+    val updatedWorkers = w.map(worker => {
+      if (worker.secLeft > 0)
+        worker.copy(secLeft = worker.secLeft - 1)
+      else
+        worker
+    })
+    updatedWorkers
+
+  def getLettersJustFinished(w: List[Worker]): Set[Char] =
+    w.collect {
+      case Worker(0, letter, true) => letter
+    }.toSet
+
+  def updateWorkersDone(w: List[Worker]): List[Worker] =
+    val updatedWorkers = w.map(worker => {
+      if (worker.secLeft == 0)
+        worker.copy(letter = ' ', working = false)
+      else
+        worker
+    })
+    updatedWorkers
+
+  def assignWorkers(w: List[Worker], toAssign: Set[Char]): List[Worker] =
+    var updatedWorkers = w
+
+    for (l <- toAssign) {
+      val indexNotWorking = updatedWorkers.indexWhere(!_.working)
+      if (indexNotWorking != -1) {
+        val workerToUpdate = updatedWorkers(indexNotWorking)
+        val updatedWorker = workerToUpdate.copy(secLeft = l.toInt - 4, letter = l, working = true)
+        updatedWorkers = updatedWorkers.updated(indexNotWorking, updatedWorker)
+      }
+    }
+    updatedWorkers
+
+  def collectWorkingLetters(w: List[Worker]): Set[Char] =
+    w.collect {
+      case Worker(_, letter, true) => letter
+    }.toSet
+
+  def updateSteps(steps: List[Step], lettersDone: Set[Char]): List[Step] =
+    val stepsToRemove = steps.filter(step => lettersDone.contains(step.left))
+    steps diff stepsToRemove
+
+  def freeLetters2(w: List[Worker], steps: List[Step]): Set[Char] =
+    val leftSet = steps.map(_.left).toSet
+    val rightSet = steps.map(_.right).toSet
+    leftSet diff rightSet diff collectWorkingLetters(w)
+
+  def ans2(): Int = {
+    var allSteps: List[Step] = inputSteps
+    var workers: List[Worker] = List.fill(5)(Worker(0, ' ', false))
+    var done = false
+    var time = 0;
+    var s = ""
+    val lastLetter = getLastLetter(inputSteps)
+
+    while (!done) {
+      val justFinished = getLettersJustFinished(workers)
+      if (justFinished.nonEmpty)
+        allSteps = updateSteps(allSteps, justFinished)
+        s += justFinished.mkString
+      workers = updateWorkersDone(workers)
+      workers = assignWorkers(workers, freeLetters2(workers, allSteps))
+      workers = updateTimeWorkers(workers)
+
+      if (allSteps.isEmpty && s.length == 25) {
+        time += lastLetter.toInt - 4
+        done = true
+      }
+      else
+        time += 1
+    }
+    time
+  }
+
+  val answer2: Int = ans2()
 
   println(Console.BLUE + s"Answer day $day part 2: ${answer2} [${System.currentTimeMillis - start2}ms]")
