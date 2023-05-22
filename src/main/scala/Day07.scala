@@ -123,30 +123,20 @@ object Day07 extends App:
     leftSet diff rightSet diff collectWorkingLetters(w)
 
   def ans2(): Int = {
-    var allSteps: List[Step] = inputSteps
-    var workers: List[Worker] = List.fill(5)(Worker(0, ' ', false))
-    var done = false
-    var time = 0;
-    var s = ""
-    val lastLetter = getLastLetter(inputSteps)
-
-    while (!done) {
-      val justFinished = getLettersJustFinished(workers)
-      if (justFinished.nonEmpty)
-        allSteps = updateSteps(allSteps, justFinished)
-        s += justFinished.mkString
-      workers = updateWorkersDone(workers)
-      workers = assignWorkers(workers, freeLetters2(workers, allSteps))
-      workers = updateTimeWorkers(workers)
-
+    def loop(allSteps: List[Step], workers: List[Worker], time: Int, s: String): Int = {
       if (allSteps.isEmpty && s.length == 25) {
-        time += lastLetter.toInt - 4
-        done = true
+        time + getLastLetter(inputSteps).toInt - 5
+      } else {
+        val justFinished: Set[Char] = getLettersJustFinished(workers)
+        val updatedSteps: List[Step] = updateSteps(allSteps, justFinished)
+        val sequenceLetters: String = s + justFinished.mkString
+        val updatedWorkers: List[Worker] = updateTimeWorkers(assignWorkers(updateWorkersDone(workers), freeLetters2(workers, updatedSteps)))
+        loop(updatedSteps, updatedWorkers, time + 1, sequenceLetters)
       }
-      else
-        time += 1
     }
-    time
+
+    val workers: List[Worker] = List.fill(5)(Worker(0, ' ', false))
+    loop(inputSteps, workers, 0, "")
   }
 
   val answer2: Int = ans2()
