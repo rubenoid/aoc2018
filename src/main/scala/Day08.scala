@@ -13,9 +13,12 @@ object Day08 extends App:
     Source
       .fromResource(s"input$day.txt")
       .getLines
+      .mkString
+      .split(" ")
       .map(s => s.toInt)
-//      .toList
+      .toList
 
+  println(input)
   val answer1: Int = 999
   println(Console.BLUE + s"Answer day $day part 1: ${answer1} [${System.currentTimeMillis - start1}ms]")
 
